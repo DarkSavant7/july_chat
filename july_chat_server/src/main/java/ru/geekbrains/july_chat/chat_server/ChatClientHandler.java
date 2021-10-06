@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
 
 public class ChatClientHandler {
     public static final String REGEX = "%&%";
@@ -17,9 +18,10 @@ public class ChatClientHandler {
     private Socket socket;
     private DataOutputStream out;
     private DataInputStream in;
-    private Thread handlerThread;
+//    private Thread handlerThread;
     private JulyChatServer server;
     private String currentUser;
+    private ExecutorService executorService;
 
     public ChatClientHandler(Socket socket, JulyChatServer server) {
         try {
@@ -28,13 +30,15 @@ public class ChatClientHandler {
             this.out = new DataOutputStream(socket.getOutputStream());
             System.out.println("Handler created");
             this.server = server;
+            this.executorService = server.getExecutorService();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public void handle() {
-        handlerThread = new Thread(() -> {
+//        handlerThread = new Thread(() -> {
+        executorService.execute(() -> {
             authorize();
             try {
                 while (!Thread.currentThread().isInterrupted() && !socket.isClosed()) {
@@ -47,7 +51,7 @@ public class ChatClientHandler {
                 server.removeAuthorizedClientFromList(this);
             }
         });
-        handlerThread.start();
+//        handlerThread.start();
     }
 
     //auth: lllll ppppp
@@ -135,10 +139,6 @@ public class ChatClientHandler {
             sendMessage("ERROR:" + REGEX + e.getMessage());
         }
         return false;
-    }
-
-    public Thread getHandlerThread() {
-        return handlerThread;
     }
 
     public String getCurrentUser() {
