@@ -41,6 +41,7 @@ public class JulyChatServer {
             e.printStackTrace();
         } finally {
             authService.stop();
+            executorService.shutdownNow();
         }
     }
 
